@@ -158,6 +158,11 @@ public class PortalServletFilter implements Filter {
         }
 
         final String userInfo = (String) session.getAttribute("USERID");
+        if (userInfo == null) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         final int slashIndex = userInfo.indexOf("/");
         final int atIndex = userInfo.indexOf("@");
         if (userInfo == null || slashIndex == -1 || atIndex == -1) {

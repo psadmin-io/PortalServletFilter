@@ -14,10 +14,6 @@ Provides additional logging for PeopleSoft applications.
 * `X-PS-SESSION-COUNT` : Displays the current total open sessions to PIA
 * `X-PS-USERID` : Displays the client's user id (Enabled by default)
 
-## Configuration
-You can find the PortalServletFilter configuration in your PIA install under `domain/applications/piaconfig/properties/PortalServletFilter.properties` 
-This config allows you to customize what headers you wanted added to responses. After making changes, you will need to restart the PIA server.
-
 ## Prerequisites
 * [Java 7]
 * PIA Common Library - You can normally find this library in your PIA install under `domain/applications/peoplesoft/pspc.war/WEB-INF/lib/piacommon.jar`
@@ -33,7 +29,7 @@ In order to build PortalServletFilter you simply need to run the `gradlew` comma
 
 ## Installation
 * Copy the portalservlet-x.x.jar to your `domain/applications/peoplesoft/PORTAL.war/WEB-INF/lib` folder.
-* Edit `web.xml` to use the new filter.
+* Edit `web.xml` under `domain/applications/peoplesoft/PORTAL.war/WEB-INF` to use the new filter.
 Here is an example of how it should look
 ```
   <filter>
@@ -52,14 +48,34 @@ Here is an example of how it should look
 * Open `http://server:port/console` and login.
 * Go to `Environment > Servers > PIA > Logging > HTTP`.
 * Click `Lock & Edit`.
-* Select the checkbox for “HTTP access log file enabled”.
+* Select the checkbox for `HTTP access log file enabled`.
 * Save the changes.
-* Expand the “Advanced” section.
+* Expand the `Advanced` section.
 * Change the Format to Extended.
 * Add each sc(HEADER) to the Extended Logging Format Fields. Replace `HEADER` with what you want to use.
-* Set the Log File Buffer to 0. (This will write entires immediately to the log file.)
+* (Optional) Set the Log File Buffer to 0 if you are debugging and need to see entries immediately.
 * Save the changes.
 * Click the `Release Configuration` button.
 * Restart the web server.
 
+## Configuration
+You can find the PortalServletFilter configuration in your PIA install under `domain/piaconfig/properties/PortalServletFilter.properties`.
+This config allows you to customize what headers you wanted added to responses. After making changes, you will need to restart the PIA server.
+
+## IMPORTANT
+All headers are added to the client response. If you do NOT want these headers to appear on client side then you will have to strip them. 
+If you are using a load balancer, here is how you can strip them from the response : 
+
+1. **[F5]**
+* [remove-x-headers-from-web-server-response](https://devcentral.f5.com/codeshare/remove-x-headers-from-web-server-response)
+
+2. **[KEMP]**
+* Create a Content Rule with type `Delete Header` and set the pattern to `/X-PS.*/`
+
+3. **[HAProxy]** (credit to coryfazzini for this one)
+* Add the following to your frontend or backend section haproxy.cfg : `rspidel ^X-PS-.*`
+
 [Java 7]: http://java.oracle.com
+[F5]: https://f5.com/glossary/load-balancer
+[KEMP]: https://kemptechnologies.com/load-balancer/
+[HAProxy]: https://www.haproxy.org/

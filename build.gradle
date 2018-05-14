@@ -1,0 +1,50 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id 'maven'
+}
+
+// Environment variables for the build set by the build server
+ext.buildNumber = System.env.BUILD_NUMBER ?: '0'
+
+defaultTasks 'clean', 'build'
+
+allprojects {
+    apply plugin: 'java'
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+}
+
+archivesBaseName = project.name.toLowerCase()
+
+version = "0.1"
+
+project.ext.getGitHash = {
+    def command = Runtime.getRuntime().exec("git rev-parse --short HEAD")
+    def result = command.waitFor()
+    return (result == 0) ? command.inputStream.text.trim() : "nogit"
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url = 'https://maven.oracle.com'
+	}
+}
+
+dependencies {
+    compileOnly "javax.servlet:javax.servlet-api:3.0.1"
+    compile files('libs/piacommon.jar')
+    compile files('libs/wls-api.jar')
+}
+
+jar {
+    manifest.attributes('Implementation-Title': 'PortalServletFilter')
+    manifest.attributes('Implementation-Version': "$version")
+    manifest.attributes('Git-Hash': project.ext.getGitHash())
+    classifier = ''
+}

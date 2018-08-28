@@ -33,13 +33,14 @@ repositories {
     mavenCentral()
     maven {
         url = 'https://maven.oracle.com'
-	}
+    }
 }
 
 dependencies {
     compileOnly "javax.servlet:javax.servlet-api:3.0.1"
     compile files('libs/piacommon.jar')
     compile files('libs/wls-api.jar')
+    compile files('libs/bea.jar')
 }
 
 jar {

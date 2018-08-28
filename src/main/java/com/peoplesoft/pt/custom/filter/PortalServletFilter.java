@@ -37,6 +37,7 @@ public class PortalServletFilter implements Filter {
     public static final String CONFIG_HEADER = "Portal Servlet Filter 0.1\n"
             + "# The following headers can be used\n"
             + "# X-PS-APPSERVER : Displays the appserver host with port\n"
+            + "# X-PS-APPSTATUS : Displays the appserver's status\n"
             + "# X-PS-AUTHTOKEN : Displays the authtoken of PIA\n"
             + "# X-PS-CLIENTIP : Displays the client's ip address\n"
             + "# X-PS-COOKIE : Displays all cookies associated with request\n"
@@ -49,6 +50,7 @@ public class PortalServletFilter implements Filter {
             + "# X-PS-USERID : Displays the client's user id\n";
     private boolean isEnabled = true;
     private boolean prop_appServer = true;
+    private boolean prop_appStatus = false;
     private boolean prop_authToken = false;
     private boolean prop_clientIp = true;
     private boolean prop_cookie = false;
@@ -87,6 +89,7 @@ public class PortalServletFilter implements Filter {
                 Files.createDirectories(propertiesPath.getParent());
                 Files.createFile(propertiesPath);
                 prop.setProperty("appserver", "true");
+                prop.setProperty("appstatus", "false");
                 prop.setProperty("authtoken", "false");
                 prop.setProperty("clientip", "true");
                 prop.setProperty("cookie", "false");
@@ -102,6 +105,7 @@ public class PortalServletFilter implements Filter {
                 InputStream is = new FileInputStream(this.propertiesPath.toFile());
                 prop.load(is);
                 this.prop_appServer = Boolean.parseBoolean(prop.getProperty("appserver", "true"));
+                this.prop_appStatus = Boolean.parseBoolean(prop.getProperty("appstatus", "false"));
                 this.prop_authToken = Boolean.parseBoolean(prop.getProperty("authtoken", "false"));
                 this.prop_clientIp = Boolean.parseBoolean(prop.getProperty("clientip", "true"));
                 this.prop_cookie = Boolean.parseBoolean(prop.getProperty("cookie", "false"));
@@ -111,7 +115,7 @@ public class PortalServletFilter implements Filter {
                 this.prop_roles = Boolean.parseBoolean(prop.getProperty("roles", "false"));
                 this.prop_sessionCookie = Boolean.parseBoolean(prop.getProperty("sessioncookie", "false"));
                 this.prop_userId = Boolean.parseBoolean(prop.getProperty("userid", "true"));
-                if (this.prop_appServer || this.prop_authToken || this.prop_menu || this.prop_pwdDaysLeft) {
+                if (this.prop_appServer || this.prop_appStatus || this.prop_authToken || this.prop_menu || this.prop_pwdDaysLeft) {
                     this.checkJoltInfo = true;
                 }
                 if (!this.checkJoltInfo && !this.prop_userId && !this.prop_clientIp && !this.prop_roles && !this.prop_cookie && !this.prop_database) {
@@ -224,6 +228,17 @@ public class PortalServletFilter implements Filter {
             if (jbe != null) {
                 NetSession ns = (psft.pt8.net.NetSession) jbe.getSession();
                 if (ns != null) {
+                    if (this.prop_appStatus) {
+                        try {
+                            if (ns.isAlive()) {
+                                servletResponse.addHeader("X-PS-APPSTATUS", "running");
+                            } else {
+                                servletResponse.addHeader("X-PS-APPSTATUS", "stopped");
+                            }
+                        } catch (Exception e) {
+                            servletResponse.addHeader("X-PS-APPSTATUS", "stopped");
+                        }
+                    }
                     if (this.prop_appServer) {
                         servletResponse.addHeader("X-PS-APPSERVER", ns.getCurrentAppServer());
                     }

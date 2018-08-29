@@ -3,6 +3,7 @@ Provides additional logging for PeopleSoft applications.
 
 ## Available Headers
 * `X-PS-APPSERVER` : Displays the appserver host with port (Enabled by default)
+* `X-PS-APPSTATUS` : Displays the appserver's status (running/stopped)
 * `X-PS-AUTHTOKEN`: Displays the authtoken of PIA
 * `X-PS-CLIENTIP` : Displays the client's ip address (Enabled by default)
 * `X-PS-COOKIE` : Displays all cookies associated with request
@@ -16,6 +17,7 @@ Provides additional logging for PeopleSoft applications.
 
 ## Prerequisites
 * [Java 7]
+* BEA Library - You can normally find this library in your PIA install under `domain/applications/peoplesoft/lib/bea.jar`
 * PIA Common Library - You can normally find this library in your PIA install under `domain/applications/peoplesoft/pspc.war/WEB-INF/lib/piacommon.jar`
 * WebLogic Server Library API - You can normally find this library in your WLS install under `ORACLE_HOME/wlserver/server/lib/wls-api.jar`
 Note: Both PIA Common and WLS API need to be copied to the libs folder of this project or it will not build properly.
@@ -35,7 +37,7 @@ Here is an example of how it should look
   <filter>
     <filter-name>PortalServletFilter</filter-name>
     <filter-class>com.peoplesoft.pt.custom.filter.PortalServletFilter</filter-class>
-		<async-supported>true</async-supported>
+    <async-supported>true</async-supported>
   </filter>
   <filter-mapping>
     <filter-name>PortalServletFilter</filter-name>

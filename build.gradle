@@ -21,7 +21,7 @@ allprojects {
 
 archivesBaseName = project.name.toLowerCase()
 
-version = "0.1"
+version = "0.2"
 
 project.ext.getGitHash = {
     def command = Runtime.getRuntime().exec("git rev-parse --short HEAD")

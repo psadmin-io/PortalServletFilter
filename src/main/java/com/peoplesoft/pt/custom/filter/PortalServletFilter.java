@@ -34,7 +34,7 @@ public class PortalServletFilter implements Filter {
     private FilterConfig config;
     private Path propertiesPath;
     private WebAppComponentRuntimeMBean peoplesoftRuntimeBean;
-    public static final String CONFIG_HEADER = "Portal Servlet Filter 0.1\n"
+    public static final String CONFIG_HEADER = "Portal Servlet Filter 0.2\n"
             + "# The following headers can be used\n"
             + "# X-PS-APPSERVER : Displays the appserver host with port\n"
             + "# X-PS-APPSTATUS : Displays the appserver's status\n"

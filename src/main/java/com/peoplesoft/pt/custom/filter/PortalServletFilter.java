@@ -59,6 +59,7 @@ public class PortalServletFilter implements Filter {
     private boolean prop_pwdDaysLeft = false;
     private boolean prop_roles = false;
     private boolean prop_sessionCookie = false;
+    private boolean prop_sessionCount = false;
     private boolean prop_userId = true;
     private boolean checkJoltInfo = false;
 
@@ -98,6 +99,7 @@ public class PortalServletFilter implements Filter {
                 prop.setProperty("pwddaysleft", "false");
                 prop.setProperty("roles", "false");
                 prop.setProperty("sessioncookie", "false");
+                prop.setProperty("sessioncount", "false");
                 prop.setProperty("userid", "true");
                 prop.store(new FileOutputStream(this.propertiesPath.toFile()), CONFIG_HEADER);
                 this.checkJoltInfo = true;
@@ -114,6 +116,7 @@ public class PortalServletFilter implements Filter {
                 this.prop_pwdDaysLeft = Boolean.parseBoolean(prop.getProperty("pwddaysleft", "false"));
                 this.prop_roles = Boolean.parseBoolean(prop.getProperty("roles", "false"));
                 this.prop_sessionCookie = Boolean.parseBoolean(prop.getProperty("sessioncookie", "false"));
+                this.prop_sessionCount = Boolean.parseBoolean(prop.getProperty("sessioncount", "false"));
                 this.prop_userId = Boolean.parseBoolean(prop.getProperty("userid", "true"));
                 if (this.prop_appServer || this.prop_appStatus || this.prop_authToken || this.prop_menu || this.prop_pwdDaysLeft) {
                     this.checkJoltInfo = true;
@@ -196,7 +199,7 @@ public class PortalServletFilter implements Filter {
             servletResponse.addHeader("X-PS-ROLES", roles);
         }
 
-        if (this.prop_authToken || this.prop_sessionCookie) {
+        if (this.prop_authToken || this.prop_sessionCookie || this.prop_sessionCount) {
             if (this.peoplesoftRuntimeBean == null) {
                 this.peoplesoftRuntimeBean = (WebAppComponentRuntimeMBean) session.getServletContext().getAttribute("weblogic.servlet.WebAppComponentRuntimeMBean");
                 if (this.peoplesoftRuntimeBean == null) {
@@ -210,6 +213,9 @@ public class PortalServletFilter implements Filter {
             }
             if (this.prop_sessionCookie) {
                 servletResponse.addHeader("X-PS-SESSION-COOKIE", this.peoplesoftRuntimeBean.getSessionCookieName());
+            }
+            if (this.prop_sessionCount) {
+                servletResponse.addHeader("X-PS-SESSION-COUNT", Integer.toString(this.peoplesoftRuntimeBean.getAllServletSessions().size()));
             }
         }
 

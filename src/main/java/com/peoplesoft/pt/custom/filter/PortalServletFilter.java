@@ -14,9 +14,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -191,7 +191,7 @@ public class PortalServletFilter implements Filter {
             servletResponse.addHeader("X-PS-DB", database);
         }
         if (this.prop_roles) {
-            final ConcurrentHashMap<String, String> roleMap = (ConcurrentHashMap<String, String>) session.getAttribute("ROLES");
+            final Hashtable<String, String> roleMap = (Hashtable<String, String>) session.getAttribute("ROLES");
             String roles = "";
             for (String role : roleMap.keySet()) {
                 roles = role + "|";

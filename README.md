@@ -1,4 +1,9 @@
 # PortalServletFilter
+
+* [Source]
+* [Issues]
+* [Downloads]
+
 Provides additional logging for PeopleSoft applications.
 
 ## Available Headers
@@ -13,14 +18,15 @@ Provides additional logging for PeopleSoft applications.
 * `X-PS-ROLES` : Displays the client's PS roles
 * `X-PS-SESSION-COOKIE` : Displays the session cookie
 * `X-PS-SESSION-COUNT` : Displays the current total open sessions to PIA
+* `X-PS-SRID` : Displays the SRID for the user's session
 * `X-PS-USERID` : Displays the client's user id (Enabled by default)
 
 ## Prerequisites
-* [Java 7]
+* [Java 8]
 * BEA Library - You can normally find this library in your PIA install under `domain/applications/peoplesoft/lib/bea.jar`
 * PIA Common Library - You can normally find this library in your PIA install under `domain/applications/peoplesoft/pspc.war/WEB-INF/lib/piacommon.jar`
 * WebLogic Server Library API - You can normally find this library in your WLS install under `ORACLE_HOME/wlserver/server/lib/wls-api.jar`
-Note: Both PIA Common and WLS API need to be copied to the libs folder of this project or it will not build properly.
+Note: BEA, PIA Common, and WLS API libs need to be copied to the libs folder of this project or it will not build properly.
 
 ## Cloning
 
@@ -77,7 +83,10 @@ If you are using a load balancer, here is how you can strip them from the respon
 3. **[HAProxy]** (credit to coryfazzini for this one)
 * Add the following to your frontend or backend section haproxy.cfg : `rspidel ^X-PS-.*`
 
-[Java 7]: http://java.oracle.com
+[Source]: https://github.com/bloodmc/PortalServletFilter
+[Issues]: https://github.com/bloodmc/PortalServletFilter/issues
+[Downloads]: https://github.com/bloodmc/PortalServletFilter/releases
+[Java 8]: http://java.oracle.com
 [F5]: https://f5.com/glossary/load-balancer
 [KEMP]: https://kemptechnologies.com/load-balancer/
 [HAProxy]: https://www.haproxy.org/

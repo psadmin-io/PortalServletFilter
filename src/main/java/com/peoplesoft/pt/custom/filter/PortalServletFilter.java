@@ -47,6 +47,7 @@ public class PortalServletFilter implements Filter {
             + "# X-PS-ROLES : Displays the client's PS roles\n"
             + "# X-PS-SESSION-COOKIE : Displays the session cookie\n"
             + "# X-PS-SESSION-COUNT : Displays the current total open sessions to PIA\n"
+            + "# X-PS-SRID : Displays the SRID for the user's session\n"
             + "# X-PS-USERID : Displays the client's user id\n";
     private boolean isEnabled = true;
     private boolean prop_appServer = true;
@@ -60,8 +61,9 @@ public class PortalServletFilter implements Filter {
     private boolean prop_roles = false;
     private boolean prop_sessionCookie = false;
     private boolean prop_sessionCount = false;
+    private boolean prop_srid = true;
     private boolean prop_userId = true;
-    private boolean checkJoltInfo = false;
+    private boolean checkSessionProps = false;
 
     public PortalServletFilter() {
         this.config = null;
@@ -100,9 +102,10 @@ public class PortalServletFilter implements Filter {
                 prop.setProperty("roles", "false");
                 prop.setProperty("sessioncookie", "false");
                 prop.setProperty("sessioncount", "false");
+                prop.setProperty("srid", "true");
                 prop.setProperty("userid", "true");
                 prop.store(new FileOutputStream(this.propertiesPath.toFile()), CONFIG_HEADER);
-                this.checkJoltInfo = true;
+                this.checkSessionProps = true;
             } else {
                 InputStream is = new FileInputStream(this.propertiesPath.toFile());
                 prop.load(is);
@@ -117,11 +120,12 @@ public class PortalServletFilter implements Filter {
                 this.prop_roles = Boolean.parseBoolean(prop.getProperty("roles", "false"));
                 this.prop_sessionCookie = Boolean.parseBoolean(prop.getProperty("sessioncookie", "false"));
                 this.prop_sessionCount = Boolean.parseBoolean(prop.getProperty("sessioncount", "false"));
+                this.prop_srid = Boolean.parseBoolean(prop.getProperty("srid", "true"));
                 this.prop_userId = Boolean.parseBoolean(prop.getProperty("userid", "true"));
-                if (this.prop_appServer || this.prop_appStatus || this.prop_authToken || this.prop_menu || this.prop_pwdDaysLeft) {
-                    this.checkJoltInfo = true;
+                if (this.prop_appServer || this.prop_appStatus || this.prop_authToken || this.prop_menu || this.prop_pwdDaysLeft || this.prop_srid) {
+                    this.checkSessionProps = true;
                 }
-                if (!this.checkJoltInfo && !this.prop_userId && !this.prop_clientIp && !this.prop_roles && !this.prop_cookie && !this.prop_database) {
+                if (!this.checkSessionProps && !this.prop_userId && !this.prop_clientIp && !this.prop_roles && !this.prop_cookie && !this.prop_database) {
                     this.isEnabled = false;
                 }
             }
@@ -219,18 +223,25 @@ public class PortalServletFilter implements Filter {
             }
         }
 
-        if (!this.checkJoltInfo) {
+        if (!this.checkSessionProps) {
             chain.doFilter(request, response);
             return;
         }
 
-        PSSessionProp portalSessionProps = (PSSessionProp) session.getAttribute("portalSessionProps/" + database);
-        if (portalSessionProps == null) {
+        PSSessionProp sessionProps = (PSSessionProp) session.getAttribute("portalSessionProps/" + database);
+        if (sessionProps == null) {
             // check icSessionProps
-            portalSessionProps = (PSSessionProp) session.getAttribute("icSessionProp/" + database);
+            sessionProps = (PSSessionProp) session.getAttribute("icSessionProp/" + database);
         }
-        if (portalSessionProps != null) {
-            JBEntry jbe = (JBEntry) portalSessionProps.get("JBridge");
+        if (sessionProps != null) {
+            if (this.prop_srid) {
+                final String SRID = (String) sessionProps.get("SRID");
+                if (SRID != null) {
+                    servletResponse.addHeader("X-PS-SRID", SRID);
+                }
+            }
+
+            JBEntry jbe = (JBEntry) sessionProps.get("JBridge");
             if (jbe != null) {
                 NetSession ns = (psft.pt8.net.NetSession) jbe.getSession();
                 if (ns != null) {

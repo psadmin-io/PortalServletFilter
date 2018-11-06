@@ -15,13 +15,13 @@ defaultTasks 'clean', 'build'
 
 allprojects {
     apply plugin: 'java'
-    sourceCompatibility = 1.7
-    targetCompatibility = 1.7
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
 }
 
 archivesBaseName = project.name.toLowerCase()
 
-version = "0.2"
+version = "0.3"
 
 project.ext.getGitHash = {
     def command = Runtime.getRuntime().exec("git rev-parse --short HEAD")

@@ -22,7 +22,7 @@ Provides additional logging for PeopleSoft applications.
 * `X-PS-USERID` : Displays the client's user id (Enabled by default)
 
 ## Prerequisites
-* [Java 8]
+* [Java 7]
 * BEA Library - You can normally find this library in your PIA install under `domain/applications/peoplesoft/lib/bea.jar`
 * PIA Common Library - You can normally find this library in your PIA install under `domain/applications/peoplesoft/pspc.war/WEB-INF/lib/piacommon.jar`
 * WebLogic Server Library API - You can normally find this library in your WLS install under `ORACLE_HOME/wlserver/server/lib/wls-api.jar`
@@ -86,7 +86,7 @@ If you are using a load balancer, here is how you can strip them from the respon
 [Source]: https://github.com/bloodmc/PortalServletFilter
 [Issues]: https://github.com/bloodmc/PortalServletFilter/issues
 [Downloads]: https://github.com/bloodmc/PortalServletFilter/releases
-[Java 8]: http://java.oracle.com
+[Java 7]: http://java.oracle.com
 [F5]: https://f5.com/glossary/load-balancer
 [KEMP]: https://kemptechnologies.com/load-balancer/
 [HAProxy]: https://www.haproxy.org/

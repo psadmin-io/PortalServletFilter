@@ -12,12 +12,12 @@ Provides additional logging for PeopleSoft applications.
 * `X-PS-AUTHTOKEN`: Displays the authtoken of PIA
 * `X-PS-CLIENTIP` : Displays the client's ip address (Enabled by default)
 * `X-PS-COOKIE` : Displays all cookies associated with request
-* `X-PS-DB` : Displays the PS database
 * `X-PS-MENU` : Displays the current menu being accessed
 * `X-PS-PWDDAYSLEFT` : Displays the user's remaining days before password expires
 * `X-PS-ROLES` : Displays the client's PS roles
 * `X-PS-SESSION-COOKIE` : Displays the session cookie
 * `X-PS-SESSION-COUNT` : Displays the current total open sessions to PIA
+* `X-PS-SITE` : Displays the PIA site name
 * `X-PS-SRID` : Displays the SRID for the user's session
 * `X-PS-USERID` : Displays the client's user id (Enabled by default)
 

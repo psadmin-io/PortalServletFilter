@@ -41,12 +41,12 @@ public class PortalServletFilter implements Filter {
             + "# X-PS-AUTHTOKEN : Displays the authtoken of PIA\n"
             + "# X-PS-CLIENTIP : Displays the client's ip address\n"
             + "# X-PS-COOKIE : Displays all cookies associated with request\n"
-            + "# X-PS-DB : Displays the PS database\n"
             + "# X-PS-MENU : Displays the current menu being accessed\n"
             + "# X-PS-PWDDAYSLEFT : Displays the user's remaining days before password expires\n"
             + "# X-PS-ROLES : Displays the client's PS roles\n"
             + "# X-PS-SESSION-COOKIE : Displays the session cookie\n"
             + "# X-PS-SESSION-COUNT : Displays the current total open sessions to PIA\n"
+            + "# X-PS-SITE : Displays the PIA site name\n"
             + "# X-PS-SRID : Displays the SRID for the user's session\n"
             + "# X-PS-USERID : Displays the client's user id\n";
     private boolean isEnabled = true;
@@ -55,12 +55,12 @@ public class PortalServletFilter implements Filter {
     private boolean prop_authToken = false;
     private boolean prop_clientIp = true;
     private boolean prop_cookie = false;
-    private boolean prop_database = false;
     private boolean prop_menu = false;
     private boolean prop_pwdDaysLeft = false;
     private boolean prop_roles = false;
     private boolean prop_sessionCookie = false;
     private boolean prop_sessionCount = false;
+    private boolean prop_site = false;
     private boolean prop_srid = true;
     private boolean prop_userId = true;
     private boolean checkSessionProps = false;
@@ -96,12 +96,12 @@ public class PortalServletFilter implements Filter {
                 prop.setProperty("authtoken", "false");
                 prop.setProperty("clientip", "true");
                 prop.setProperty("cookie", "false");
-                prop.setProperty("database", "false");
                 prop.setProperty("menu", "false");
                 prop.setProperty("pwddaysleft", "false");
                 prop.setProperty("roles", "false");
                 prop.setProperty("sessioncookie", "false");
                 prop.setProperty("sessioncount", "false");
+                prop.setProperty("site", "false");
                 prop.setProperty("srid", "true");
                 prop.setProperty("userid", "true");
                 prop.store(new FileOutputStream(this.propertiesPath.toFile()), CONFIG_HEADER);
@@ -114,18 +114,18 @@ public class PortalServletFilter implements Filter {
                 this.prop_authToken = Boolean.parseBoolean(prop.getProperty("authtoken", "false"));
                 this.prop_clientIp = Boolean.parseBoolean(prop.getProperty("clientip", "true"));
                 this.prop_cookie = Boolean.parseBoolean(prop.getProperty("cookie", "false"));
-                this.prop_database = Boolean.parseBoolean(prop.getProperty("database", "false"));
                 this.prop_menu = Boolean.parseBoolean(prop.getProperty("menu", "false"));
                 this.prop_pwdDaysLeft = Boolean.parseBoolean(prop.getProperty("pwddaysleft", "false"));
                 this.prop_roles = Boolean.parseBoolean(prop.getProperty("roles", "false"));
                 this.prop_sessionCookie = Boolean.parseBoolean(prop.getProperty("sessioncookie", "false"));
                 this.prop_sessionCount = Boolean.parseBoolean(prop.getProperty("sessioncount", "false"));
+                this.prop_site = Boolean.parseBoolean(prop.getProperty("site", "false"));
                 this.prop_srid = Boolean.parseBoolean(prop.getProperty("srid", "true"));
                 this.prop_userId = Boolean.parseBoolean(prop.getProperty("userid", "true"));
                 if (this.prop_appServer || this.prop_appStatus || this.prop_authToken || this.prop_menu || this.prop_pwdDaysLeft || this.prop_srid) {
                     this.checkSessionProps = true;
                 }
-                if (!this.checkSessionProps && !this.prop_userId && !this.prop_clientIp && !this.prop_roles && !this.prop_cookie && !this.prop_database) {
+                if (!this.checkSessionProps && !this.prop_userId && !this.prop_clientIp && !this.prop_roles && !this.prop_cookie && !this.prop_site) {
                     this.isEnabled = false;
                 }
             }
@@ -186,13 +186,13 @@ public class PortalServletFilter implements Filter {
         if (this.prop_userId) {
             servletResponse.addHeader("X-PS-USERID", userId);
         }
-        final String database = userInfo.substring(slashIndex + 1, userInfo.length());
+        final String site = userInfo.substring(slashIndex + 1, userInfo.length());
         if (this.prop_clientIp) {
             final String clientIp = userInfo.substring(atIndex + 1, slashIndex);
             servletResponse.addHeader("X-PS-CLIENTIP", clientIp);
         }
-        if (this.prop_database) {
-            servletResponse.addHeader("X-PS-DB", database);
+        if (this.prop_site) {
+            servletResponse.addHeader("X-PS-SITE", site);
         }
         if (this.prop_roles) {
             final Hashtable<String, String> roleMap = (Hashtable<String, String>) session.getAttribute("ROLES");
@@ -228,10 +228,10 @@ public class PortalServletFilter implements Filter {
             return;
         }
 
-        PSSessionProp sessionProps = (PSSessionProp) session.getAttribute("portalSessionProps/" + database);
+        PSSessionProp sessionProps = (PSSessionProp) session.getAttribute("portalSessionProps/" + site);
         if (sessionProps == null) {
             // check icSessionProps
-            sessionProps = (PSSessionProp) session.getAttribute("icSessionProp/" + database);
+            sessionProps = (PSSessionProp) session.getAttribute("icSessionProp/" + site);
         }
         if (sessionProps != null) {
             if (this.prop_srid) {

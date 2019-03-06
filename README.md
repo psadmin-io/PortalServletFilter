@@ -25,8 +25,8 @@ Provides additional logging for PeopleSoft applications.
 * [Java 7]
 * BEA Library - You can normally find this library in your PIA install under `domain/applications/peoplesoft/lib/bea.jar`
 * PIA Common Library - You can normally find this library in your PIA install under `domain/applications/peoplesoft/pspc.war/WEB-INF/lib/piacommon.jar`
-* WebLogic Server Library API - You can normally find this library in your WLS install under `ORACLE_HOME/wlserver/server/lib/wls-api.jar`
-Note: BEA, PIA Common, and WLS API libs need to be copied to the libs folder of this project or it will not build properly.
+* WebLogic Server Library API - You can normally find this library in your WLS install under `ORACLE_HOME/wlserver/server/lib/wls-api.jar`  
+**Note: BEA, PIA Common, and WLS API libs need to be copied to the libs folder of this project or it will not build properly.**
 
 ## Cloning
 

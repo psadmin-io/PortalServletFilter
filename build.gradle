@@ -2,9 +2,14 @@ buildscript {
     repositories {
         mavenCentral()
     }
+
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
+    }
 }
 
 plugins {
+    id 'com.github.johnrengelman.shadow' version '2.0.1'
     id 'maven'
 }
 
@@ -34,13 +39,22 @@ repositories {
     maven {
         url = 'https://maven.oracle.com'
     }
+    maven {
+        name = 'sponge'
+        url = 'https://repo.spongepowered.org/maven'
+    }
 }
 
 dependencies {
-    compileOnly "javax.servlet:javax.servlet-api:3.0.1"
-    compile files('libs/piacommon.jar')
-    compile files('libs/wls-api.jar')
-    compile files('libs/bea.jar')
+    compile 'com.typesafe:config:1.3.1'
+    compile 'commons-net:commons-net:3.6'
+    compile 'org.spongepowered:configurate-core:3.7-SNAPSHOT'
+    compile 'org.spongepowered:configurate-hocon:3.7-SNAPSHOT'
+    compileOnly 'commons-io:commons-io:2.6'
+    compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
+    compileOnly files('libs/piacommon.jar')
+    compileOnly files('libs/wls-api.jar')
+    compileOnly files('libs/bea.jar')
 }
 
 jar {
@@ -48,4 +62,21 @@ jar {
     manifest.attributes('Implementation-Version': "$version")
     manifest.attributes('Git-Hash': project.ext.getGitHash())
     classifier = ''
+}
+
+artifacts {
+    archives shadowJar
+}
+
+shadowJar {
+    classifier = ''
+
+    dependencies {
+        include dependency("com.typesafe:config:1.3.1")
+        include dependency("commons-net:commons-net:3.6")
+        include dependency("org.spongepowered:configurate-core:3.7-SNAPSHOT")
+        include dependency("org.spongepowered:configurate-hocon:3.7-SNAPSHOT")
+    }
+
+    exclude "dummyThing"
 }

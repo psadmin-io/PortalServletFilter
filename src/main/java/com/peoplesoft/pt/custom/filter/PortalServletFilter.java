@@ -1,22 +1,24 @@
 package com.peoplesoft.pt.custom.filter;
 
+import com.google.common.io.ByteSource;
+import com.peoplesoft.pt.custom.filter.config.PortalServletConfig;
+import com.peoplesoft.pt.custom.filter.config.category.HeaderCategory;
+import com.peoplesoft.pt.custom.filter.config.category.ReloadCommandCategory;
+import com.peoplesoft.pt.custom.filter.config.util.PSRequestInfo;
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.net.util.SubnetUtils;
 import psft.pt8.jb.JBEntry;
 import psft.pt8.net.NetSession;
 import psft.pt8.util.PSSessionProp;
 import weblogic.management.runtime.WebAppComponentRuntimeMBean;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.Enumeration;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Properties;
-import java.util.Vector;
+import java.util.List;
+import java.util.logging.Logger;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -31,38 +33,14 @@ import javax.servlet.http.HttpSession;
 
 public class PortalServletFilter implements Filter {
 
+    public static final String FILTER_ID = "PortalServletFilter";
+    private static final String FORM_CONTENT_TYPE = "application/x-www-form-urlencoded";
     private FilterConfig config;
-    private Path propertiesPath;
+    private PortalServletConfig portalConfig;
+    private HeaderCategory headerCategory;
+    private ReloadCommandCategory reloadCategory;
     private WebAppComponentRuntimeMBean peoplesoftRuntimeBean;
-    public static final String CONFIG_HEADER = "Portal Servlet Filter 0.2\n"
-            + "# The following headers can be used\n"
-            + "# X-PS-APPSERVER : Displays the appserver host with port\n"
-            + "# X-PS-APPSTATUS : Displays the appserver's status\n"
-            + "# X-PS-AUTHTOKEN : Displays the authtoken of PIA\n"
-            + "# X-PS-CLIENTIP : Displays the client's ip address\n"
-            + "# X-PS-COOKIE : Displays all cookies associated with request\n"
-            + "# X-PS-MENU : Displays the current menu being accessed\n"
-            + "# X-PS-PWDDAYSLEFT : Displays the user's remaining days before password expires\n"
-            + "# X-PS-ROLES : Displays the client's PS roles\n"
-            + "# X-PS-SESSION-COOKIE : Displays the session cookie\n"
-            + "# X-PS-SESSION-COUNT : Displays the current total open sessions to PIA\n"
-            + "# X-PS-SITE : Displays the PIA site name\n"
-            + "# X-PS-SRID : Displays the SRID for the user's session\n"
-            + "# X-PS-USERID : Displays the client's user id\n";
     private boolean isEnabled = true;
-    private boolean prop_appServer = true;
-    private boolean prop_appStatus = false;
-    private boolean prop_authToken = false;
-    private boolean prop_clientIp = true;
-    private boolean prop_cookie = false;
-    private boolean prop_menu = false;
-    private boolean prop_pwdDaysLeft = false;
-    private boolean prop_roles = false;
-    private boolean prop_sessionCookie = false;
-    private boolean prop_sessionCount = false;
-    private boolean prop_site = false;
-    private boolean prop_srid = true;
-    private boolean prop_userId = true;
     private boolean checkSessionProps = false;
 
     public PortalServletFilter() {
@@ -71,66 +49,14 @@ public class PortalServletFilter implements Filter {
     }
 
     private void loadProperties() {
-        Properties prop = new Properties() {
-            private static final long serialVersionUID = -1414273837759328933L;
-
-            @SuppressWarnings({ "unchecked", "rawtypes" })
-            @Override
-            public Enumeration keys() {
-                Enumeration keysEnum = super.keys();
-                Vector<String> keyList = new Vector<String>();
-                while(keysEnum.hasMoreElements()){
-                  keyList.add((String)keysEnum.nextElement());
-                }
-                Collections.sort(keyList);
-                return keyList.elements();
-             }  
-        };
-        try {
-            this.propertiesPath = Paths.get("piaconfig", "properties", "PortalServletFilter.properties");
-            if (!Files.exists(this.propertiesPath)) {
-                Files.createDirectories(propertiesPath.getParent());
-                Files.createFile(propertiesPath);
-                prop.setProperty("appserver", "true");
-                prop.setProperty("appstatus", "false");
-                prop.setProperty("authtoken", "false");
-                prop.setProperty("clientip", "true");
-                prop.setProperty("cookie", "false");
-                prop.setProperty("menu", "false");
-                prop.setProperty("pwddaysleft", "false");
-                prop.setProperty("roles", "false");
-                prop.setProperty("sessioncookie", "false");
-                prop.setProperty("sessioncount", "false");
-                prop.setProperty("site", "false");
-                prop.setProperty("srid", "true");
-                prop.setProperty("userid", "true");
-                prop.store(new FileOutputStream(this.propertiesPath.toFile()), CONFIG_HEADER);
-                this.checkSessionProps = true;
-            } else {
-                InputStream is = new FileInputStream(this.propertiesPath.toFile());
-                prop.load(is);
-                this.prop_appServer = Boolean.parseBoolean(prop.getProperty("appserver", "true"));
-                this.prop_appStatus = Boolean.parseBoolean(prop.getProperty("appstatus", "false"));
-                this.prop_authToken = Boolean.parseBoolean(prop.getProperty("authtoken", "false"));
-                this.prop_clientIp = Boolean.parseBoolean(prop.getProperty("clientip", "true"));
-                this.prop_cookie = Boolean.parseBoolean(prop.getProperty("cookie", "false"));
-                this.prop_menu = Boolean.parseBoolean(prop.getProperty("menu", "false"));
-                this.prop_pwdDaysLeft = Boolean.parseBoolean(prop.getProperty("pwddaysleft", "false"));
-                this.prop_roles = Boolean.parseBoolean(prop.getProperty("roles", "false"));
-                this.prop_sessionCookie = Boolean.parseBoolean(prop.getProperty("sessioncookie", "false"));
-                this.prop_sessionCount = Boolean.parseBoolean(prop.getProperty("sessioncount", "false"));
-                this.prop_site = Boolean.parseBoolean(prop.getProperty("site", "false"));
-                this.prop_srid = Boolean.parseBoolean(prop.getProperty("srid", "true"));
-                this.prop_userId = Boolean.parseBoolean(prop.getProperty("userid", "true"));
-                if (this.prop_appServer || this.prop_appStatus || this.prop_authToken || this.prop_menu || this.prop_pwdDaysLeft || this.prop_srid) {
-                    this.checkSessionProps = true;
-                }
-                if (!this.checkSessionProps && !this.prop_userId && !this.prop_clientIp && !this.prop_roles && !this.prop_cookie && !this.prop_site) {
-                    this.isEnabled = false;
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        this.portalConfig = new PortalServletConfig();
+        this.headerCategory = portalConfig.getConfig().headers;
+        this.reloadCategory = portalConfig.getConfig().commands.reload;
+        if (this.headerCategory.appServer|| headerCategory.appStatus || headerCategory.authToken || headerCategory.menu || headerCategory.pwdDaysLeft || headerCategory.srid) {
+            this.checkSessionProps = true;
+        }
+        if (!this.checkSessionProps && !headerCategory.userid && !headerCategory.clientIp && !headerCategory.roles && !headerCategory.cookie && !headerCategory.site && !headerCategory.requestSearchData) {
+            this.isEnabled = false;
         }
     }
 
@@ -150,14 +76,37 @@ public class PortalServletFilter implements Filter {
         }
 
         final HttpServletRequest servletRequest = (HttpServletRequest) request;
+        final PSRequestInfo requestInfo = new PSRequestInfo(this.portalConfig, servletRequest);
+        if (!requestInfo.contentTypeAllowed()) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         final HttpServletResponse servletResponse = (HttpServletResponse) response;
         final HttpSession session = servletRequest.getSession(false);
+
+        String clientIp = "";
+        if (this.reloadCategory.allowReload) {
+            final String queryString = servletRequest.getQueryString();
+            if (queryString != null) {
+                clientIp = this.getClientIp(servletRequest);
+                if (queryString.contains("srvcmd=reload") && this.canReload(clientIp)) {
+                    this.reloadConfig();
+                }
+            }
+        }
+        if (this.headerCategory.clientIp) {
+            if (clientIp.isEmpty()) {
+                clientIp = this.getClientIp(servletRequest);
+            }
+            servletResponse.addHeader("X-PS-CLIENTIP", clientIp);
+        }
         if (session == null) {
             chain.doFilter(request, response);
             return;
         }
 
-        if (this.prop_cookie) {
+        if (this.headerCategory.cookie) {
             final Cookie[] reqCookies = servletRequest.getCookies();
             if (reqCookies != null) {
                 String cookies = "";
@@ -183,18 +132,14 @@ public class PortalServletFilter implements Filter {
         }
 
         final String userId = userInfo.substring(0, atIndex);
-        if (this.prop_userId) {
+        if (this.headerCategory.userid) {
             servletResponse.addHeader("X-PS-USERID", userId);
         }
         final String site = userInfo.substring(slashIndex + 1, userInfo.length());
-        if (this.prop_clientIp) {
-            final String clientIp = userInfo.substring(atIndex + 1, slashIndex);
-            servletResponse.addHeader("X-PS-CLIENTIP", clientIp);
-        }
-        if (this.prop_site) {
+        if (this.headerCategory.site) {
             servletResponse.addHeader("X-PS-SITE", site);
         }
-        if (this.prop_roles) {
+        if (this.headerCategory.roles) {
             final Hashtable<String, String> roleMap = (Hashtable<String, String>) session.getAttribute("ROLES");
             String roles = "";
             for (String role : roleMap.keySet()) {
@@ -203,7 +148,7 @@ public class PortalServletFilter implements Filter {
             servletResponse.addHeader("X-PS-ROLES", roles);
         }
 
-        if (this.prop_authToken || this.prop_sessionCookie || this.prop_sessionCount) {
+        if (this.headerCategory.authToken || this.headerCategory.sessionCookie || this.headerCategory.sessionCount) {
             if (this.peoplesoftRuntimeBean == null) {
                 this.peoplesoftRuntimeBean = (WebAppComponentRuntimeMBean) session.getServletContext().getAttribute("weblogic.servlet.WebAppComponentRuntimeMBean");
                 if (this.peoplesoftRuntimeBean == null) {
@@ -212,18 +157,91 @@ public class PortalServletFilter implements Filter {
                 }
             }
 
-            if (this.prop_authToken) {
+            if (this.headerCategory.authToken) {
                 servletResponse.addHeader("X-PS-AUTHTOKEN", this.peoplesoftRuntimeBean.getSessionCookieDomain());
             }
-            if (this.prop_sessionCookie) {
+            if (this.headerCategory.sessionCookie) {
                 servletResponse.addHeader("X-PS-SESSION-COOKIE", this.peoplesoftRuntimeBean.getSessionCookieName());
             }
-            if (this.prop_sessionCount) {
+            if (this.headerCategory.sessionCount) {
                 servletResponse.addHeader("X-PS-SESSION-COUNT", Integer.toString(this.peoplesoftRuntimeBean.getAllServletSessions().size()));
             }
         }
 
+        PortalServletRequestWrapper requestWrapper = null;
+        if (this.headerCategory.requestSearchData && !(request instanceof PortalServletRequestWrapper)) {
+            final String contentType = servletRequest.getContentType();
+            final boolean isFormPost =  (contentType != null && contentType.contains(FORM_CONTENT_TYPE)
+                        && "POST".equalsIgnoreCase(servletRequest.getMethod()));
+            if (isFormPost && this.requestTracked(requestInfo.getRequestDataKey())) {
+                requestWrapper = new PortalServletRequestWrapper(servletRequest);
+                try {
+                    final String read = ByteSource.wrap(requestWrapper.getCachedData())
+                        .asCharSource(StandardCharsets.UTF_8).read();
+                    // strip ICBcDomData data
+                    final String delim1 = "&ICBcDomData=";
+                    final int p1 = read.indexOf(delim1);
+                    final int p2 = read.indexOf("&ICPanelName");
+                    String result = read;
+                    if (p1 >= 0 && p2 > p1) {
+                        result = result.substring(0, p1+delim1.length())
+                                   + ""
+                                   + result.substring(p2);
+                    }
+                    final String decoded = java.net.URLDecoder.decode(result, StandardCharsets.UTF_8.name());
+                    final String[] postParams = decoded.split("&");
+                    final List<String> searchData = new ArrayList<>();
+                    final List<String> metaData = new ArrayList<>();
+                    final boolean isSearchRequest = decoded.contains("ICAction=#KEY") || decoded.contains("ICAction=#ICSearch");
+                    for (String param : postParams) {
+                        final int index = param.indexOf("=");
+                        if (index == -1) {
+                            continue;
+                        }
+
+                        final String[] parts = param.split("=");
+                        if (parts.length < 2) {
+                            // Ignore keys with no data
+                            continue;
+                        }
+
+                        final String key = parts[0];
+                        final String value = parts[1];
+                        if (key.equals("ICBcDomData") || key.equals("FacetPath") || key.equals("ResponsetoDiffFrame") || key.equals("TargetFrameName")) {
+                            // ignore
+                            continue;
+                        }
+
+                        if (isSearchRequest && !key.startsWith("IC") && !key.startsWith("#IC") && !this.searchRecordBlacklisted(key)) {
+                            searchData.add(param);
+                        }
+                        if (metaDataTracked(param)) {
+                            metaData.add(param);
+                        }
+                    }
+
+                    if (!metaData.isEmpty()) {
+                        // make sure to strip CRLF endings
+                        final String data = String.join(",", metaData).replace("\n", "").replace("\r", "");
+                        servletResponse.addHeader("X-PS-REQ-META", data);
+                    }
+                    if (!searchData.isEmpty()) {
+                        // make sure to strip CRLF endings
+                        final String data = String.join(",", searchData).replace("\n", "").replace("\r", "");
+                        servletResponse.addHeader("X-PS-REQ-SRCH", data);
+                    }
+                } catch (Throwable t) {
+                    // ignore
+                }
+            }
+        }
+
         if (!this.checkSessionProps) {
+            if (requestWrapper != null) {
+                chain.doFilter(requestWrapper, response);
+                return;
+            }
+
             chain.doFilter(request, response);
             return;
         }
@@ -234,7 +252,7 @@ public class PortalServletFilter implements Filter {
             sessionProps = (PSSessionProp) session.getAttribute("icSessionProp/" + site);
         }
         if (sessionProps != null) {
-            if (this.prop_srid) {
+            if (this.headerCategory.srid) {
                 final String SRID = (String) sessionProps.get("SRID");
                 if (SRID != null) {
                     servletResponse.addHeader("X-PS-SRID", SRID);
@@ -245,7 +263,7 @@ public class PortalServletFilter implements Filter {
             if (jbe != null) {
                 NetSession ns = (psft.pt8.net.NetSession) jbe.getSession();
                 if (ns != null) {
-                    if (this.prop_appStatus) {
+                    if (this.headerCategory.appStatus) {
                         try {
                             if (ns.isAlive()) {
                                 servletResponse.addHeader("X-PS-APPSTATUS", "running");
@@ -256,19 +274,83 @@ public class PortalServletFilter implements Filter {
                             servletResponse.addHeader("X-PS-APPSTATUS", "stopped");
                         }
                     }
-                    if (this.prop_appServer) {
+                    if (this.headerCategory.appServer) {
                         servletResponse.addHeader("X-PS-APPSERVER", ns.getCurrentAppServer());
                     }
-                    if (this.prop_menu) {
+                    if (this.headerCategory.menu) {
                         servletResponse.addHeader("X-PS-MENU", ns.getLoginInfo().getCurrentMenuName());
                     }
-                    if (this.prop_pwdDaysLeft) {
+                    if (this.headerCategory.pwdDaysLeft) {
                         servletResponse.addHeader("X-PS-PWDDAYSLEFT", Integer.toString(ns.getPwdDaysLeft()));
                     }
                 }
             }
         }
 
+        if (requestWrapper != null) {
+            chain.doFilter(requestWrapper, response);
+            return;
+        }
+
         chain.doFilter(request, response);
+    }
+
+    private String getClientIp(HttpServletRequest servletRequest) {
+        String clientIp = servletRequest.getHeader("X-FORWARDED-FOR");
+        if (clientIp == null) {
+            clientIp = servletRequest.getRemoteAddr();
+        }
+        return clientIp;
+    }
+
+    private boolean canReload(String clientIp) {
+        for (String subnet : this.reloadCategory.whitelist) {
+            final SubnetUtils utils = new SubnetUtils(subnet);
+            if (utils.getInfo().isInRange(clientIp)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void reloadConfig() {
+        try {
+            this.portalConfig.load();
+            this.headerCategory = this.portalConfig.getConfig().headers;
+            this.reloadCategory = this.portalConfig.getConfig().commands.reload;
+            Logger.getLogger(this.getClass().getName()).info("Reloaded configuration.");
+        } catch (ObjectMappingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean requestTracked(String key) {
+        for (String entry : portalConfig.getConfig().requestData.request_whitelist) {
+            if (FilenameUtils.wildcardMatch(key.toLowerCase(), entry.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean searchRecordBlacklisted(String key) {
+        for (String entry : portalConfig.getConfig().requestData.search_record_blacklist) {
+            if (FilenameUtils.wildcardMatch(key.toLowerCase(), entry.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean metaDataTracked(String key) {
+        for (String entry : portalConfig.getConfig().requestData.metadata_whitelist) {
+            if (FilenameUtils.wildcardMatch(key.toLowerCase(), entry.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -7,12 +7,14 @@
 Provides additional logging for PeopleSoft applications.
 
 ## Available Headers
-* `X-PS-APPSERVER` : Displays the appserver host with port (Enabled by default)
+* `X-PS-APPSERVER` : Displays the appserver host with port
 * `X-PS-APPSTATUS` : Displays the appserver's status (running/stopped)
 * `X-PS-AUTHTOKEN`: Displays the authtoken of PIA
 * `X-PS-CLIENTIP` : Displays the client's ip address (Enabled by default)
 * `X-PS-COOKIE` : Displays all cookies associated with request
 * `X-PS-MENU` : Displays the current menu being accessed
+* `X-PS-REQ-DATA` : Displays a comma separated list of request metadata in the format : 'key=value'
+* `X-PS-REQ-SRCH` : Displays a comma separated list of request search data in the format : 'key=value'
 * `X-PS-PWDDAYSLEFT` : Displays the user's remaining days before password expires
 * `X-PS-ROLES` : Displays the client's PS roles
 * `X-PS-SESSION-COOKIE` : Displays the session cookie
@@ -22,7 +24,7 @@ Provides additional logging for PeopleSoft applications.
 * `X-PS-USERID` : Displays the client's user id (Enabled by default)
 
 ## Prerequisites
-* [Java 7]
+* [Java 8]
 * BEA Library - You can normally find this library in your PIA install under `domain/applications/peoplesoft/lib/bea.jar`
 * PIA Common Library - You can normally find this library in your PIA install under `domain/applications/peoplesoft/pspc.war/WEB-INF/lib/piacommon.jar`
 * WebLogic Server Library API - You can normally find this library in your WLS install under `ORACLE_HOME/wlserver/server/lib/wls-api.jar`
@@ -67,8 +69,8 @@ Here is an example of how it should look
 * Restart the web server.
 
 ## Configuration
-You can find the PortalServletFilter configuration in your PIA install under `domain/piaconfig/properties/PortalServletFilter.properties`.
-This config allows you to customize what headers you wanted added to responses. After making changes, you will need to restart the PIA server.
+You can find the PortalServletFilter configuration in your PIA install under `domain/piaconfig/properties/PortalServletFilter.conf`.
+This config allows you to customize what headers you want added to responses. After making changes, you can pass `srvcmd=reload` in a request or restart the PIA server to reload configuration.
 
 ## IMPORTANT
 All headers are added to the client response. If you do NOT want these headers to appear on client side then you will have to strip them. 
@@ -86,7 +88,7 @@ If you are using a load balancer, here is how you can strip them from the respon
 [Source]: https://github.com/bloodmc/PortalServletFilter
 [Issues]: https://github.com/bloodmc/PortalServletFilter/issues
 [Downloads]: https://github.com/bloodmc/PortalServletFilter/releases
-[Java 7]: http://java.oracle.com
+[Java 8]: http://java.oracle.com
 [F5]: https://f5.com/glossary/load-balancer
 [KEMP]: https://kemptechnologies.com/load-balancer/
 [HAProxy]: https://www.haproxy.org/
